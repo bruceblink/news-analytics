@@ -6,6 +6,7 @@ news_info = Table(
     "news_info",
     metadata,
     Column("id", BigInteger, primary_key=True),
+    Column("name", String(50), nullable=False),
     Column("news_from", String(50), nullable=False),
     Column("news_date", Date, nullable=False),
     Column("data", JSON),

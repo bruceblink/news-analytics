@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 # helper to query news rows (simple)
 async def _fetch_news_rows(start_date: Optional[str], end_date: Optional[str], limit: int = 1000):
     async with AsyncSessionLocal() as session:
-        sql = "SELECT id, data, news_date FROM news_info"
+        sql = "SELECT id, name, data, news_date FROM news_info"
         conds = []
         params = {}
         if start_date:
