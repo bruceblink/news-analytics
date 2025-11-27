@@ -1,0 +1,21 @@
+###
+GET http://localhost:8000/
+
+<> 2025-11-27T232434.404.json
+
+###
+GET http://localhost:8000/api/analysis
+
+<> 2025-11-27T232448.404.json
+
+###
+GET http://localhost:8000/api/analysis/news
+Accept: application/json
+###
+GET http://localhost:8000/api/analysis/tfidf
+
+###
+GET http://localhost:8000/api/analysis/wordcloud
+
+###
+GET http://localhost:8000/api/analysis/wordcloud/image/{{filename}}
