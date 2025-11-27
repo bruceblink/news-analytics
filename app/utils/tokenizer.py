@@ -18,7 +18,7 @@ def load_stopwords(path: str = None):
 def tokenize_chinese(text: str) -> List[str]:
     if not text:
         return []
-    words = jieba.lcut(text)
+    words = jieba.cut(text)
     if _stopwords:
         words = [w for w in words if w.strip() and w not in _stopwords]
     else:
