@@ -6,5 +6,9 @@ class Settings(BaseSettings):
     STATIC_DIR: str = os.getenv("STATIC_DIR", "static")
     WORDCLOUD_DIR: str = os.getenv("WORDCLOUD_DIR", "static/wordclouds")
     TFIDF_MAX_FEATURES: int = int(os.getenv("TFIDF_MAX_FEATURES", "2000"))
+    # 项目根目录
+    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # 停词表文件
+    STOPWORDS_FILE: str = os.path.join(BASE_DIR, "chinese_stopwords.txt")
 
 settings = Settings()

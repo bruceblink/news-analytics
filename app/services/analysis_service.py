@@ -13,9 +13,12 @@ from ..utils.tokenizer import tokenize_chinese
 
 executor = ThreadPoolExecutor(max_workers=2)
 
-# Helper to fetch documents from DB: will be called in router with session
+# Load Chinese stopwords
+with open(settings.STOPWORDS_FILE, encoding="utf-8") as f:
+    CHINESE_STOPWORDS = list({line.strip() for line in f if line.strip()})
+
+# Helper to fetch documents from DB
 async def docs_to_corpus(rows: List[Dict[str, Any]]) -> List[str]:
-    # Each row expected to have 'data' JSON with title/extra etc.
     corpus = []
     for r in rows:
         data = r.get("data") or {}
@@ -32,31 +35,36 @@ async def docs_to_corpus(rows: List[Dict[str, Any]]) -> List[str]:
     return corpus
 
 def _chinese_tokenizer_for_tfidf(text: str):
-    # returns list of tokens or a string (scikit-learn expects callable that returns iterable)
-    return tokenize_chinese(text)
+    tokens = tokenize_chinese(text)
+    tokens = [t for t in tokens if t not in CHINESE_STOPWORDS]
+    return tokens
 
 def compute_tfidf_top(corpus: List[str], top_n: int = 50, max_features: int = None):
-    # run in threadpool (blocking)
     max_features = max_features or settings.TFIDF_MAX_FEATURES
     vect = TfidfVectorizer(
         tokenizer=_chinese_tokenizer_for_tfidf,
+        stop_words=CHINESE_STOPWORDS,  # 已在 tokenizer 里处理
         max_features=max_features,
-        token_pattern=None  # disable default token pattern because we're using tokenizer
+        token_pattern=None
     )
     X = vect.fit_transform(corpus)
     names = vect.get_feature_names_out()
-    # compute mean tf-idf across docs and take top_n
     import numpy as np
-    scores = X.mean(axis=0).A1  # average tf-idf across documents
+    scores = X.mean(axis=0).A1
     idx = (-scores).argsort()[:top_n]
     return [{"term": names[i], "score": float(scores[i])} for i in idx]
 
 def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
-    text = " ".join([" ".join(tokenize_chinese(t)) for t in corpus])
+    text = " ".join([" ".join([t for t in tokenize_chinese(t) if t not in CHINESE_STOPWORDS]) for t in corpus])
     if not os.path.exists(os.path.dirname(out_path)):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    wc = WordCloud(font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                   width=1200, height=600, max_words=max_words)
+    wc = WordCloud(
+        font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        width=1200,
+        height=600,
+        max_words=max_words,
+        stopwords=CHINESE_STOPWORDS
+    )
     wc.generate(text)
     wc.to_file(out_path)
     return out_path
