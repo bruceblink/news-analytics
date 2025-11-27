@@ -18,16 +18,17 @@ async def docs_to_corpus(rows: List[Dict[str, Any]]) -> List[str]:
     # Each row expected to have 'data' JSON with title/extra etc.
     corpus = []
     for r in rows:
-        d = r.get("data") or {}
-        title = d.get("title", "") if isinstance(d, dict) else ""
-        hover = ""
-        if isinstance(d, dict):
-            extra = d.get("extra", {})
-            # try multiple fields
-            hover = extra.get("hover", "") if isinstance(extra, dict) else ""
-        text = f"{title} {hover}"
-        text = clean_html(text)
-        corpus.append(text)
+        data = r.get("data") or {}
+        for item in data.get("items", []):
+            title = item.get("title", "") if isinstance(item, dict) else ""
+            hover = ""
+            if isinstance(item, dict):
+                extra = item.get("extra", {})
+                # try multiple fields
+                hover = extra.get("hover", "") if isinstance(extra, dict) else ""
+            text = f"{title} {hover}"
+            text = clean_html(text)
+            corpus.append(text)
     return corpus
 
 def _chinese_tokenizer_for_tfidf(text: str):
