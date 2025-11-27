@@ -18,6 +18,6 @@ COPY . /app
 RUN mkdir -p /app/static/wordclouds
 
 ENV PYTHONUNBUFFERED=1
-ENV DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/newsdb
+ENV DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/newsletter
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
