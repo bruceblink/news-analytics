@@ -59,7 +59,7 @@ def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
     if not os.path.exists(os.path.dirname(out_path)):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
     wc = WordCloud(
-        font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        font_path=f"{settings.STATIC_DIR}/ARHei.ttf",
         width=1200,
         height=600,
         max_words=max_words,
