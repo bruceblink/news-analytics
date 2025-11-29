@@ -1,15 +1,14 @@
 import os
-import io
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Any
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-import pandas as pd
-from datetime import date
+
 from ..config import settings
 from ..utils.cleaner import clean_html
 from ..utils.tokenizer import tokenize_chinese
+from wordfreq_cn import extract_keywords_tfidf
 
 executor = ThreadPoolExecutor(max_workers=2)
 
@@ -40,19 +39,8 @@ def _chinese_tokenizer_for_tfidf(text: str):
     return tokens
 
 def compute_tfidf_top(corpus: List[str], top_n: int = 50, max_features: int = None):
-    max_features = max_features or settings.TFIDF_MAX_FEATURES
-    vect = TfidfVectorizer(
-        tokenizer=_chinese_tokenizer_for_tfidf,
-        stop_words=CHINESE_STOPWORDS,  # 已在 tokenizer 里处理
-        max_features=max_features,
-        token_pattern=None
-    )
-    X = vect.fit_transform(corpus)
-    names = vect.get_feature_names_out()
-    import numpy as np
-    scores = X.mean(axis=0).A1
-    idx = (-scores).argsort()[:top_n]
-    return [{"term": names[i], "score": float(scores[i])} for i in idx]
+    result = extract_keywords_tfidf(corpus, top_k=top_n, max_features=max_features)
+    return [{"term": kws.word, "score": kws.weight} for kws in result.keywords]
 
 def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
     text = " ".join([" ".join([t for t in tokenize_chinese(t) if t not in CHINESE_STOPWORDS]) for t in corpus])
@@ -71,6 +59,7 @@ def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
 
 # Public coroutine wrappers
 import asyncio
+
 
 async def async_tfidf_top(corpus: List[str], top_n: int = 50, max_features: int = None):
     loop = asyncio.get_running_loop()
