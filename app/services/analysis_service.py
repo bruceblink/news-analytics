@@ -2,12 +2,10 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from wordcloud import WordCloud
-from wordfreq_cn import extract_keywords_tfidf
+from wordfreq_cn import extract_keywords_tfidf, generate_trend_wordcloud
 
 from ..config import settings
 from ..utils.cleaner import clean_html
-from ..utils.tokenizer import tokenize_chinese
 
 executor = ThreadPoolExecutor(max_workers=2)
 
@@ -35,20 +33,10 @@ def compute_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = No
     return [{"term": kws.word, "score": kws.weight} for kws in result.keywords]
 
 
-def generate_wordcloud(corpus: list[str], out_path: str, max_words: int = 200):
-    text = " ".join([" ".join([t for t in tokenize_chinese(t) if t not in CHINESE_STOPWORDS]) for t in corpus])
-    if not os.path.exists(os.path.dirname(out_path)):
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    wc = WordCloud(
-        font_path=f"{settings.STATIC_DIR}/ARHei.ttf",
-        width=1200,
-        height=600,
-        max_words=max_words,
-        stopwords=CHINESE_STOPWORDS
-    )
-    wc.generate(text)
-    wc.to_file(out_path)
-    return out_path
+def generate_wordcloud(
+    corpus: list[str], out_path: str, max_words: int = 200
+) -> list[str]:
+    return generate_trend_wordcloud(corpus, output_dir=out_path, max_words=max_words)
 
 
 # Public coroutine wrappers
@@ -57,7 +45,9 @@ import asyncio
 
 async def async_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = None):
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(executor, compute_tfidf_top, corpus, top_n, max_features)
+    return await loop.run_in_executor(
+        executor, compute_tfidf_top, corpus, top_n, max_features
+    )
 
 
 async def async_generate_wordcloud(corpus: list[str], filename: str):
