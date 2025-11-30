@@ -11,20 +11,26 @@ executor = ThreadPoolExecutor(max_workers=2)
 
 
 # Helper to fetch documents from DB
-async def docs_to_corpus(rows: list[dict[str, Any]]) -> list[str]:
-    corpus = []
+async def docs_to_corpus(rows: list[dict[str, Any]]) -> dict[str, list[str]]:
+    from collections import defaultdict
+
+    corpus = defaultdict(list)  # 自动初始化不存在的键
     for r in rows:
-        data = r.get("data") or {}
+        data = r.get("data", {})
+        news_date = r.get("news_date", "")
+
         for item in data.get("items", []):
             title = item.get("title", "") if isinstance(item, dict) else ""
             hover = ""
             if isinstance(item, dict):
                 extra = item.get("extra", {})
-                # try multiple fields
                 hover = extra.get("hover", "") if isinstance(extra, dict) else ""
+
             text = f"{title} {hover}"
             text = clean_html(text)
-            corpus.append(text)
+
+            # 直接添加到对应日期的列表中
+            corpus[news_date].append(text)
     return corpus
 
 
@@ -50,7 +56,8 @@ async def async_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int 
     )
 
 
-async def async_generate_wordcloud(corpus: list[str], filename: str):
-    out_path = os.path.join(settings.WORDCLOUD_DIR, filename)
+async def async_generate_wordcloud(corpus: list[str], file_dir: str):
+
+    out_path = os.path.join(settings.WORDCLOUD_DIR, file_dir)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(executor, generate_wordcloud, corpus, out_path)
