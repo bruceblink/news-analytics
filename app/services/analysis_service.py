@@ -1,23 +1,22 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Any
+from typing import Any
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
+from wordfreq_cn import extract_keywords_tfidf
 
 from ..config import settings
 from ..utils.cleaner import clean_html
 from ..utils.tokenizer import tokenize_chinese
-from wordfreq_cn import extract_keywords_tfidf
 
 executor = ThreadPoolExecutor(max_workers=2)
 
 # Load Chinese stopwords
 with open(settings.STOPWORDS_FILE, encoding="utf-8") as f:
-    CHINESE_STOPWORDS = list({line.strip() for line in f if line.strip()})
+    CHINESE_STOPWORDS = set({line.strip() for line in f if line.strip()})
 
 # Helper to fetch documents from DB
-async def docs_to_corpus(rows: List[Dict[str, Any]]) -> List[str]:
+async def docs_to_corpus(rows: list[dict[str, Any]]) -> list[str]:
     corpus = []
     for r in rows:
         data = r.get("data") or {}
@@ -38,11 +37,11 @@ def _chinese_tokenizer_for_tfidf(text: str):
     tokens = [t for t in tokens if t not in CHINESE_STOPWORDS]
     return tokens
 
-def compute_tfidf_top(corpus: List[str], top_n: int = 50, max_features: int = None):
+def compute_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = None):
     result = extract_keywords_tfidf(corpus, top_k=top_n, max_features=max_features)
     return [{"term": kws.word, "score": kws.weight} for kws in result.keywords]
 
-def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
+def generate_wordcloud(corpus: list[str], out_path: str, max_words: int = 200):
     text = " ".join([" ".join([t for t in tokenize_chinese(t) if t not in CHINESE_STOPWORDS]) for t in corpus])
     if not os.path.exists(os.path.dirname(out_path)):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -61,11 +60,11 @@ def generate_wordcloud(corpus: List[str], out_path: str, max_words: int = 200):
 import asyncio
 
 
-async def async_tfidf_top(corpus: List[str], top_n: int = 50, max_features: int = None):
+async def async_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = None):
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(executor, compute_tfidf_top, corpus, top_n, max_features)
 
-async def async_generate_wordcloud(corpus: List[str], filename: str):
+async def async_generate_wordcloud(corpus: list[str], filename: str):
     out_path = os.path.join(settings.WORDCLOUD_DIR, filename)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(executor, generate_wordcloud, corpus, out_path)
