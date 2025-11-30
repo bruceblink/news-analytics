@@ -5,9 +5,9 @@
 常用导出: config, db, models, routers, services
 """
 
+from . import models
 from .config import settings
 from .db import get_session
-from . import models
 
 # 子包（routers/services/utils）让外部可以以 app.routers 形式访问
 __all__ = [

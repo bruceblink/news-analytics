@@ -1,5 +1,6 @@
 import re
 
+
 def clean_html(text: str) -> str:
     if not text:
         return ""

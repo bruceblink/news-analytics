@@ -1,8 +1,10 @@
-import jieba
 from typing import List
+
+import jieba
 
 # Pre-load user dict or stopwords if needed
 _stopwords = None
+
 
 def load_stopwords(path: str = None):
     global _stopwords
@@ -14,6 +16,7 @@ def load_stopwords(path: str = None):
                 if w:
                     s.add(w)
     _stopwords = s
+
 
 def tokenize_chinese(text: str) -> List[str]:
     if not text:

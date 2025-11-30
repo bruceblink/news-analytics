@@ -1,5 +1,7 @@
 import os
+
 from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost:5432/newsletter")
@@ -10,5 +12,6 @@ class Settings(BaseSettings):
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # 停词表文件
     STOPWORDS_FILE: str = os.path.join(BASE_DIR, "chinese_stopwords.txt")
+
 
 settings = Settings()
