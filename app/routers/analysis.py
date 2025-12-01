@@ -109,7 +109,7 @@ async def wordcloud(params: WordcloudQuery = Depends()):
     if not corpus:
         raise HTTPException(status_code=404, detail="No documents")
 
-    out = await async_generate_wordcloud(corpus, file_dir="")
+    out = await async_generate_wordcloud(corpus)
     # return direct file or url path list
     return {"urls": out}
 
