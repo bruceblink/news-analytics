@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, date
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
@@ -16,6 +17,12 @@ from ..services.analysis_service import (
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
 
+def _to_date(d: str | None) -> date | None:
+    if d is None:
+        return None
+    return datetime.strptime(d, "%Y-%m-%d").date()
+
+
 # helper to query news rows (simple)
 async def _fetch_news_rows(
     start_date: str | None, end_date: str | None, limit: int = 1000
@@ -24,29 +31,36 @@ async def _fetch_news_rows(
         sql = "SELECT id, name, news_from, data, news_date FROM news_info"
         conds = []
         params = {}
-        if start_date:
+
+        # 🔥 在这里转换为 datetime.date
+        start_date_obj = _to_date(start_date)
+        end_date_obj = _to_date(end_date)
+
+        if start_date_obj:
             conds.append("news_date >= :start_date")
-            params["start_date"] = start_date
-        if end_date:
+            params["start_date"] = start_date_obj
+
+        if end_date_obj:
             conds.append("news_date <= :end_date")
-            params["end_date"] = end_date
+            params["end_date"] = end_date_obj
+
         if conds:
             sql += " WHERE " + " AND ".join(conds)
         sql += " ORDER BY news_date DESC LIMIT :limit"
         params["limit"] = limit
         result = await session.execute(text(sql), params)
-        rows = []
-        for row in result:
-            row_dict = {
+
+        rows = [
+            {
                 "id": row.id,
                 "name": row.name,
                 "news_from": row.news_from,
-                "news_date": (
-                    row.news_date.isoformat() if row.news_date else None
-                ),  # 格式化为 YYYY-MM-DD
+                "news_date": row.news_date.isoformat() if row.news_date else None,
                 "data": row.data,
             }
-            rows.append(row_dict)
+            for row in result
+        ]
+
         return rows
 
 
@@ -70,8 +84,13 @@ async def tfidf_top(
     corpus = await docs_to_corpus(rows)
     if not corpus:
         return {"terms": []}
-    top = await async_tfidf_top(corpus, top_n=n)
-    return {"terms": top}
+
+    from collections import defaultdict
+
+    tops = defaultdict(list)
+    for k, v in corpus.items():
+        tops[k] = await async_tfidf_top(v, top_n=n)
+    return {"terms": tops}
 
 
 @router.get("/wordcloud", summary="生成词云并返回图片 URL")
