@@ -32,8 +32,8 @@ async def _fetch_news_rows(
         conds = []
         params = {}
 
-        # 🔥 在这里转换为 datetime.date
-        start_date_obj = _to_date(start_date)
+        # 🔥 在这里转换为 datetime.date,如果start_date不存在就取当天日期
+        start_date_obj = _to_date(start_date) if start_date else datetime.now().date()
         end_date_obj = _to_date(end_date)
 
         if start_date_obj:
