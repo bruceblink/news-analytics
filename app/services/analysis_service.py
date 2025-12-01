@@ -57,7 +57,7 @@ async def async_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int 
 
 
 async def async_generate_wordcloud(
-    corpus: dict[str, list[str]], file_dir: str
+    corpus: dict[str, list[str]], file_dir: str | None = ""
 ) -> list[str]:
     out_path = os.path.join(settings.WORDCLOUD_DIR, file_dir)
     # 应用于文件I/O

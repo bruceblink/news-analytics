@@ -3,7 +3,7 @@ import re
 from datetime import datetime, date
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
+from fastapi import APIRouter, HTTPException, Query, Depends, Path, Body
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
 # helper to query news rows (simple)
 async def _fetch_news_rows(
-    start_date: date | None, end_date: date | None, limit: int = 1000
+    start_date: date | None, end_date: date | None, limit: int | None = 1000
 ) -> list[dict[str, Any]]:
     async with AsyncSessionLocal() as session:
         sql = "SELECT id, name, news_from, data, news_date FROM news_info"
@@ -112,6 +112,31 @@ async def wordcloud(params: WordcloudQuery = Depends()):
     out = await async_generate_wordcloud(corpus, file_dir="")
     # return direct file or url path list
     return {"urls": out}
+
+
+@router.post("/wordcloud/generate", summary="生成最新词云图")
+async def generate_wordcloud(
+    gene_date: str | None = Body(None),
+    force: bool | None = Body(False),
+):
+    # 1. 确定日期
+    now_date = datetime.now()
+    if gene_date is None:
+        gene_date = now_date.strftime("%Y-%m-%d")
+
+    # 2. 如果已有文件且 force == False，则返回已有路径
+    dir_path = os.path.join(settings.WORDCLOUD_DIR, gene_date)
+    if os.path.exists(dir_path) and not force:
+        return {"status": "exists", "date": gene_date}
+
+    # 3. 获取生成词云的数据
+    rows = await _fetch_news_rows(start_date=now_date.date(), end_date=now_date.date())
+    corpus = await docs_to_corpus(rows)
+
+    # 4. 调用业务逻辑生成词云
+    image_path = await async_generate_wordcloud(corpus)
+
+    return {"status": "ok", "date": gene_date, "image_path": image_path[0]}
 
 
 # -------------------------
