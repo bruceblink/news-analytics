@@ -82,7 +82,7 @@ class TFIDFQuery(BaseModel):
 
 @router.get("/tfidf", summary="返回 TF-IDF Top N 词")
 async def tfidf_top(params: TFIDFQuery = Depends()):
-    rows = await _fetch_news_rows(params.start_date, params.end_date, limit=5000)
+    rows = await _fetch_news_rows(params.start_date, params.end_date, limit=params.n)
 
     corpus = await docs_to_corpus(rows)
     if not corpus:
@@ -97,9 +97,13 @@ async def tfidf_top(params: TFIDFQuery = Depends()):
     return {"terms": tops}
 
 
+class WordcloudQuery(TFIDFQuery):
+    pass
+
+
 @router.get("/wordcloud", summary="生成词云并返回图片 URL")
-async def wordcloud(start_date: str | None = None, end_date: str | None = None):
-    rows = await _fetch_news_rows(start_date, end_date, limit=5000)
+async def wordcloud(params: WordcloudQuery = Depends()):
+    rows = await _fetch_news_rows(params.start_date, params.end_date, limit=params.n)
     corpus = await docs_to_corpus(rows)
     if not corpus:
         raise HTTPException(status_code=404, detail="No documents")
