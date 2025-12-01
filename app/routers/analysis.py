@@ -2,8 +2,9 @@ import os
 from datetime import datetime, date
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 
 from ..config import settings
@@ -17,32 +18,21 @@ from ..services.analysis_service import (
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
 
-def _to_date(d: str | None) -> date | None:
-    if d is None:
-        return None
-    return datetime.strptime(d, "%Y-%m-%d").date()
-
-
 # helper to query news rows (simple)
 async def _fetch_news_rows(
-    start_date: str | None, end_date: str | None, limit: int = 1000
+    start_date: date | None, end_date: date | None, limit: int = 1000
 ) -> list[dict[str, Any]]:
     async with AsyncSessionLocal() as session:
         sql = "SELECT id, name, news_from, data, news_date FROM news_info"
         conds = []
         params = {}
-
-        # 🔥 在这里转换为 datetime.date,如果start_date不存在就取当天日期
-        start_date_obj = _to_date(start_date) if start_date else datetime.now().date()
-        end_date_obj = _to_date(end_date)
-
-        if start_date_obj:
+        start_date = start_date or datetime.now().date()
+        if start_date:
             conds.append("news_date >= :start_date")
-            params["start_date"] = start_date_obj
-
-        if end_date_obj:
+            params["start_date"] = start_date  # 已经是 date 对象
+        if end_date:
             conds.append("news_date <= :end_date")
-            params["end_date"] = end_date_obj
+            params["end_date"] = end_date
 
         if conds:
             sql += " WHERE " + " AND ".join(conds)
@@ -74,13 +64,26 @@ async def list_news(
     return {"count": len(rows), "items": rows}
 
 
+class TFIDFQuery(BaseModel):
+    n: int = Field(50, ge=1, le=500)
+    start_date: date | None = None
+    end_date: date | None = None
+
+    @field_validator("start_date", "end_date", mode="before")
+    @classmethod
+    def check_date_format(cls, v):
+        if v is None:
+            return v
+        try:
+            return date.fromisoformat(v)
+        except ValueError:
+            raise ValueError("日期格式错误，应为 YYYY-MM-DD")
+
+
 @router.get("/tfidf", summary="返回 TF-IDF Top N 词")
-async def tfidf_top(
-    n: int = Query(50, ge=1, le=500),
-    start_date: str | None = None,
-    end_date: str | None = None,
-):
-    rows = await _fetch_news_rows(start_date, end_date, limit=5000)
+async def tfidf_top(params: TFIDFQuery = Depends()):
+    rows = await _fetch_news_rows(params.start_date, params.end_date, limit=5000)
+
     corpus = await docs_to_corpus(rows)
     if not corpus:
         return {"terms": []}
@@ -89,7 +92,8 @@ async def tfidf_top(
 
     tops = defaultdict(list)
     for k, v in corpus.items():
-        tops[k] = await async_tfidf_top(v, top_n=n)
+        tops[k] = await async_tfidf_top(v, top_n=params.n)
+
     return {"terms": tops}
 
 
