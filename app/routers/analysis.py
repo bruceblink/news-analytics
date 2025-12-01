@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime, date
 from typing import Any
 
@@ -118,10 +119,15 @@ async def wordcloud(params: WordcloudQuery = Depends()):
 # -------------------------
 def _get_latest_wordcloud_file(folder: str) -> str | None:
     """返回指定文件夹中修改时间最新的文件路径"""
-    if not os.path.exists(folder):
+
+    wordcloud_pic_dir = os.path.join(settings.WORDCLOUD_DIR, folder)
+
+    if not os.path.exists(wordcloud_pic_dir):
         return None
-    files = [os.path.join(folder, f) for f in os.listdir(folder)]
-    files = [f for f in files if os.path.isfile(f)]
+    files_dir = [
+        os.path.join(wordcloud_pic_dir, f) for f in os.listdir(wordcloud_pic_dir)
+    ]
+    files = [f for f in files_dir if os.path.isfile(f)]
     if not files:
         return None
     # 按修改时间排序
@@ -131,13 +137,50 @@ def _get_latest_wordcloud_file(folder: str) -> str | None:
 
 @router.get("/wordcloud/image", summary="获取词云图片（默认当天日期）")
 async def wordcloud_image_default():
-    wordcloud_date = datetime.now().strftime("%Y-%m-%d")
-    latest_file = _get_latest_wordcloud_file(wordcloud_date)
     """
     获取当天的词云图
+    :return:
     """
+    wordcloud_date = datetime.now().strftime("%Y-%m-%d")
+    latest_file = _get_latest_wordcloud_file(wordcloud_date)
     if not latest_file:
         raise HTTPException(status_code=404, detail="当天没有可用词云图片")
+    return FileResponse(latest_file, media_type="image/png")
+
+
+def get_latest_date_folder():
+    """
+    获取最新更新的文件夹
+    :return:
+    """
+    folders = []
+    for name in os.listdir(settings.WORDCLOUD_DIR):
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", name):
+            folders.append(name)
+
+    if not folders:
+        return None
+
+    # 依赖日期格式排序即可
+    return max(folders)
+
+
+@router.get("/wordcloud/image/latest", summary="获取最新生成的词云图片")
+async def wordcloud_image_latest():
+    # 遍历 WORDCLOUD_DIR 下的日期子文件夹
+    if not os.path.exists(settings.WORDCLOUD_DIR):
+        raise HTTPException(status_code=404, detail="没有可用的词云图片")
+
+    latest_folder = get_latest_date_folder()
+    if not latest_folder:
+        raise HTTPException(status_code=404, detail="没有可用的词云图片")
+
+    # 找到所有文件夹下的最新文件
+    latest_file = _get_latest_wordcloud_file(latest_folder)
+
+    if not latest_file:
+        raise HTTPException(status_code=404, detail="没有可用的词云图片")
+
     return FileResponse(latest_file, media_type="image/png")
 
 
@@ -161,35 +204,4 @@ async def wordcloud_image_with_date(
         raise HTTPException(
             status_code=404, detail=f"{wordcloud_date} 没有可用词云图片"
         )
-    return FileResponse(latest_file, media_type="image/png")
-
-
-@router.get("/wordcloud/image/latest", summary="获取最新生成的词云图片")
-async def wordcloud_image_latest():
-    # 遍历 WORDCLOUD_DIR 下的日期子文件夹
-    if not os.path.exists(settings.WORDCLOUD_DIR):
-        raise HTTPException(status_code=404, detail="没有可用的词云图片")
-
-    date_folders = [
-        os.path.join(settings.WORDCLOUD_DIR, d)
-        for d in os.listdir(settings.WORDCLOUD_DIR)
-    ]
-    date_folders = [d for d in date_folders if os.path.isdir(d)]
-    if not date_folders:
-        raise HTTPException(status_code=404, detail="没有可用的词云图片")
-
-    # 找到所有文件夹下的最新文件
-    latest_file = None
-    latest_mtime = 0
-    for folder in date_folders:
-        f = _get_latest_wordcloud_file(folder)
-        if f:
-            mtime = os.path.getmtime(f)
-            if mtime > latest_mtime:
-                latest_file = f
-                latest_mtime = mtime
-
-    if not latest_file:
-        raise HTTPException(status_code=404, detail="没有可用的词云图片")
-
     return FileResponse(latest_file, media_type="image/png")
