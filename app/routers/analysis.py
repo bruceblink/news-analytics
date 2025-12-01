@@ -127,7 +127,8 @@ async def generate_wordcloud(
     # 2. 如果已有文件且 force == False，则返回已有路径
     dir_path = os.path.join(settings.WORDCLOUD_DIR, gene_date)
     if os.path.exists(dir_path) and not force:
-        return {"status": "exists", "date": gene_date}
+        image_path = _get_latest_wordcloud_file(gene_date)
+        return {"status": "exists", "date": gene_date, "image_path": image_path}
 
     # 3. 获取生成词云的数据
     rows = await _fetch_news_rows(start_date=now_date.date(), end_date=now_date.date())
