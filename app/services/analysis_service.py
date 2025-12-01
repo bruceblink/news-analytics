@@ -40,7 +40,7 @@ def compute_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = No
 
 
 def generate_wordcloud(
-    corpus: list[str], out_path: str, max_words: int = 200
+    corpus: dict[str, list[str]], out_path: str, max_words: int | None = 200
 ) -> list[str]:
     return generate_trend_wordcloud(corpus, output_dir=out_path, max_words=max_words)
 
@@ -50,14 +50,15 @@ import asyncio
 
 
 async def async_tfidf_top(corpus: list[str], top_n: int = 50, max_features: int = None):
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_running_loop()  # 应用于CPU密集型
     return await loop.run_in_executor(
         executor, compute_tfidf_top, corpus, top_n, max_features
     )
 
 
-async def async_generate_wordcloud(corpus: list[str], file_dir: str):
-
+async def async_generate_wordcloud(
+    corpus: dict[str, list[str]], file_dir: str
+) -> list[str]:
     out_path = os.path.join(settings.WORDCLOUD_DIR, file_dir)
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(executor, generate_wordcloud, corpus, out_path)
+    # 应用于文件I/O
+    return await asyncio.to_thread(generate_wordcloud, corpus, out_path)
