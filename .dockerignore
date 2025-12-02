@@ -1,15 +1,38 @@
-__pycache__
+# .dockerignore
+
+# 忽略 Python 缓存和字节码
+__pycache__/
 *.pyc
 *.pyo
-.pytest_cache
-.vscode
-.git
-.env
-venv
+*.pyd
+.Python
+
+# 忽略虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# 忽略 setuptools 和 pip 产生的分发/构建目录
+build/
+dist/
+*.egg-info/     # 这行会忽略所有 .egg-info 文件夹，包括你的 news_analytics_web.egg-info
+*.egg
+
+# 忽略IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 忽略版本控制
+.git/
+.gitignore
+
+# 忽略日志文件
 *.log
-Dockerfile
-README.md
-.github
-static/
-*.http
-*.egg-info/
+
+# （可选）如果你有本地测试或配置文件，也建议忽略
+*.local
+.env
+.env.production
