@@ -1,23 +1,19 @@
 FROM python:3.12-slim
 
-# system deps for wordcloud/font rendering
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libfreetype6-dev \
-    libpng-dev \
-    fonts-dejavu-core \
-    && rm -rf /var/lib/apt/lists/*
-
+# 设置工作目录
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app
+# 1. 复制依赖声明文件（优先复制以利用Docker缓存层）
+COPY pyproject.toml .
 
-# ensure static directory exists
-RUN mkdir -p /app/static/wordclouds
+# 2. 安装依赖
+RUN pip install --no-cache-dir .
 
-ENV PYTHONUNBUFFERED=1
-ENV DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/newsletter
+# 3. 复制项目所有代码
+COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# 4. 暴露端口（与uvicorn运行端口一致）
+EXPOSE 8000
+
+# 5. 启动命令
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
