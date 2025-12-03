@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["app*", "main.py"]
+include = ["app*"]
 exclude = ["static"]
 
 [project.optional-dependencies]
