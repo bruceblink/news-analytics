@@ -25,5 +25,5 @@ handlers = ["tls", "http"]  # HTTPS 流量
 [[vm]]
 cpu_kind = "shared"
 cpus = 1
-memory = "256mb"
+memory = "512mb"
 memory_mb = 256
