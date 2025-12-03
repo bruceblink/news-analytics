@@ -1,3 +1,5 @@
+import re
+import ssl
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -10,18 +12,11 @@ from .config import settings
 # --------------------------
 DATABASE_URL = settings.DATABASE_URL
 
-# Render 默认 postgres:// 需要改为 asyncpg
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+ssl_context = ssl.create_default_context()
+engine = create_async_engine(re.sub(r'^postgresql:', 'postgresql+asyncpg:', DATABASE_URL),
+                             echo=True,
+                             connect_args={"ssl": ssl_context})
 
-# --------------------------
-# 2. 创建异步引擎
-# --------------------------
-engine = create_async_engine(
-    DATABASE_URL,
-    future=True,
-    echo=False,  # 部署生产可关闭
-)
 
 # --------------------------
 # 3. 异步会话工厂
