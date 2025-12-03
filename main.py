@@ -8,9 +8,9 @@ from app.routers import analysis
 
 app = FastAPI(title="News Analytics API")
 
-# mount static
-if not os.path.exists(settings.WORDCLOUD_DIR):
-    os.makedirs(settings.WORDCLOUD_DIR, exist_ok=True)
+# 创建静态文件夹
+os.makedirs(settings.WORDCLOUD_DIR, exist_ok=True)
+# 挂载静态目录
 app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 
 # include routers
