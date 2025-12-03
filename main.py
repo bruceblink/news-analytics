@@ -2,6 +2,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import RedirectResponse
 
 from app import settings
 from app.routers import analysis
@@ -16,6 +17,9 @@ app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 # include routers
 app.include_router(analysis.router)
 
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
 
 @app.get("/health")
 async def health():
