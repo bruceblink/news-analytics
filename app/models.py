@@ -1,5 +1,5 @@
 from sqlalchemy import Table, Column, BigInteger, String, Date, Text, TIMESTAMP, MetaData, ForeignKey, JSON, \
-    UniqueConstraint
+    UniqueConstraint, Boolean
 from sqlalchemy.sql import func
 
 metadata = MetaData()
@@ -20,13 +20,18 @@ news_info = Table(
 news_item = Table(
     "news_item",
     metadata,
-    Column("id", Text, primary_key=True),  # 使用Text对应PostgreSQL的text类型
+    Column("id", Text, primary_key=True),
     Column("news_info_id", BigInteger, ForeignKey("news_info.id", ondelete="CASCADE")),
     Column("title", Text, nullable=False),
     Column("url", Text, nullable=False),
     Column("published_at", Date),
     Column("source", String(50)),
     Column("content", Text),
+
+    # ⭐ 新增字段
+    Column("extracted", Boolean, nullable=False, server_default="false"),
+    Column("extracted_at", TIMESTAMP(timezone=True), nullable=True),
+
     Column("created_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column("updated_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
