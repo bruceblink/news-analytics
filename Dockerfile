@@ -15,6 +15,6 @@ COPY . .
 
 # 4. 暴露端口（Render 会注入 PORT）
 EXPOSE 8001
-
+ENV APP_ENV=production
 # 5. 启动命令
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8001}"]

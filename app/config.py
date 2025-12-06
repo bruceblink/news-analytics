@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # 环境判断
+    ENVIRONMENT: str = os.getenv("APP_ENV", "production")
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
         "postgresql+asyncpg://postgres:password@localhost:5432/newsletter",
