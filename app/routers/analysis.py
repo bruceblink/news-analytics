@@ -24,30 +24,31 @@ async def _fetch_news_rows(
     start_date: date | None, end_date: date | None, limit: int | None = 1000
 ) -> list[dict[str, Any]]:
     async with AsyncSessionLocal() as session:
-        sql = "SELECT id, name, news_from, data, news_date FROM news_info"
+        sql = "SELECT id, news_info_id, title, url, published_at, source, content FROM news_item"
         conds = []
         params = {}
         start_date = start_date or datetime.now().date()
         if start_date:
-            conds.append("news_date >= :start_date")
+            conds.append("published_at >= :start_date")
             params["start_date"] = start_date  # 已经是 date 对象
         if end_date:
-            conds.append("news_date <= :end_date")
+            conds.append("published_at <= :end_date")
             params["end_date"] = end_date
 
         if conds:
             sql += " WHERE " + " AND ".join(conds)
-        sql += " ORDER BY news_date DESC LIMIT :limit"
+        sql += " ORDER BY published_at DESC LIMIT :limit"
         params["limit"] = limit
         result = await session.execute(text(sql), params)
 
         rows = [
             {
                 "id": row.id,
-                "name": row.name,
-                "news_from": row.news_from,
-                "news_date": row.news_date.isoformat() if row.news_date else None,
-                "data": row.data,
+                "title": row.title,
+                "url": row.url,
+                "published_at": row.published_at.isoformat() if row.published_at else None,
+                "source": row.source,
+                "content": row.content,
             }
             for row in result
         ]
