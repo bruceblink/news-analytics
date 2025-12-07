@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..config import settings
 from ..dao import fetch_news_item_rows
-from ..dao.news_keywords_dao import save_news_keywords
+from ..services import extract_keywords_task
 from ..services.analysis_service import (
     docs_to_corpus,
     async_tfidf_top,
@@ -53,7 +53,8 @@ async def tfidf_top(params: TFIDFQuery = Depends()):
         return {"terms": []}
 
     tops =  await async_tfidf_top(rows, top_n=params.top_k)
-    await save_news_keywords(tops)
+    # 执行提取关键字的事务作业
+    await extract_keywords_task(tops)
     return tops
 
 
