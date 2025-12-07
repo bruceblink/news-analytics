@@ -28,7 +28,8 @@ async def list_news(
 
 
 class TFIDFQuery(BaseModel):
-    n: int = Field(50, ge=1, le=500)
+    limit: int = Field(500, ge=1, le=500)
+    top_k: int = Field(5, ge=1, le=10)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -45,14 +46,14 @@ class TFIDFQuery(BaseModel):
 
 @router.get("/tfidf", summary="返回 TF-IDF Top N 词")
 async def tfidf_top(params: TFIDFQuery = Depends()):
-    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.n)
+    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
 
     if not rows:
         return {"terms": []}
 
-    tops =  await async_tfidf_top(rows, top_n=params.n)
+    tops =  await async_tfidf_top(rows, top_n=params.top_k)
 
-    return {"terms": tops}
+    return tops
 
 
 class WordcloudQuery(TFIDFQuery):
@@ -61,7 +62,7 @@ class WordcloudQuery(TFIDFQuery):
 
 @router.get("/wordcloud", summary="生成词云并返回图片 URL")
 async def wordcloud(params: WordcloudQuery = Depends()):
-    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.n)
+    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
     corpus = await docs_to_corpus(rows)
     if not corpus:
         raise HTTPException(status_code=404, detail="No documents")
