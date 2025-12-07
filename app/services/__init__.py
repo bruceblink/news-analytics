@@ -8,9 +8,11 @@ from .analysis_service import (
     async_tfidf_top,
     async_generate_wordcloud,
 )
+from .extract_news_service import extract_keywords_task
 
 __all__ = [
     "docs_to_corpus",
     "async_tfidf_top",
     "async_generate_wordcloud",
+    "extract_keywords_task"
 ]
