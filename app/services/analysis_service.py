@@ -5,7 +5,6 @@ from typing import Any
 from wordfreq_cn import generate_trend_wordcloud, extract_keywords_tfidf_per_doc
 
 from ..config import settings
-from ..dao import NewsKeywordsDTO
 from ..utils.cleaner import clean_html
 
 executor = ThreadPoolExecutor(max_workers=2)
@@ -39,7 +38,7 @@ def compute_tfidf_top(
         corpus: list[dict],
         top_n: int = 5,
         max_features: int = None
-) -> list[NewsKeywordsDTO]:
+) -> list[dict]:
     """
     对每条新闻提取 top_n 关键词（per-document TF-IDF）。
     依赖 extract_keywords_tfidf 返回的:
@@ -70,12 +69,12 @@ def compute_tfidf_top(
 
     # 3. Flatten → List[NewsKeywordsDTO]
     results = [
-        NewsKeywordsDTO(
-            news_id=news_id,
-            word=kw.word,
-            weight=kw.weight,
-            method="tfidf"
-        )
+        {
+            "news_id": news_id,
+            "keyword": kw.word,
+            "weight": kw.weight,
+            "method": "tfidf"
+        }
         for news_id, kws in zip(news_ids, per_doc_keywords)
         for kw in kws
     ]
