@@ -39,11 +39,12 @@ news_item = Table(
 news_keywords = Table(
     "news_keywords",
     metadata,
-    Column("id", BigInteger, primary_key=True),
-    Column("news_id", Text, ForeignKey("news_item.id", ondelete="CASCADE")),
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("news_id",Text,ForeignKey("news_item.id", ondelete="CASCADE"),nullable=False,),
     Column("keyword", Text, nullable=False),
-    Column("weight", Float, nullable=False),
+    Column("weight", Float, nullable=True),
     Column("method", Text, nullable=False),
-    Column("created_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
-    Column("updated_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column("created_at",TIMESTAMP(timezone=True),server_default=func.current_timestamp(),nullable=False),
+    Column("updated_at",TIMESTAMP(timezone=True),server_default=func.current_timestamp(),nullable=False),
+    UniqueConstraint("news_id", "keyword", "method", name="uq_news_keywords"),
 )
