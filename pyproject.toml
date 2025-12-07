@@ -32,7 +32,7 @@ exclude = ["static"]
 
 [project.optional-dependencies]
 test = [
-    "pytest>=7.0",
+    "pytest>=9.0.2",
     "pytest-mock>=3.0",
     "pytest-cov>=4.0",
 ]
