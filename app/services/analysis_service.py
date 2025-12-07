@@ -39,7 +39,7 @@ def compute_tfidf_top(
         corpus: list[dict],
         top_n: int = 5,
         max_features: int = None
-):
+) -> list[NewsKeywordsDTO]:
     """
     对每条新闻提取 top_n 关键词（per-document TF-IDF）。
     依赖 extract_keywords_tfidf 返回的:
