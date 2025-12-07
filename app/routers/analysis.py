@@ -50,12 +50,12 @@ async def tfidf_top(params: TFIDFQuery = Depends()):
     rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
 
     if not rows:
-        return {"terms": []}
+        return {"status": "ok", "terms": []}
 
     tops =  await async_tfidf_top(rows, top_n=params.top_k)
     # 执行提取关键字的事务作业
     await extract_keywords_task(tops)
-    return tops
+    return {"status": "ok", "terms": tops}
 
 
 class WordcloudQuery(TFIDFQuery):
