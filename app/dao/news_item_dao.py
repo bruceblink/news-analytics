@@ -1,7 +1,7 @@
 # helper to query news rows (simple)
 from datetime import date
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update, func
 
 from app.db import AsyncSessionLocal
 from app.models import news_item
@@ -50,3 +50,23 @@ async def fetch_news_item_rows(
             }
             for r in rows
         ]
+
+
+async def update_news_item_extracted_state(session, items: list[dict]) -> None:
+    if not items:
+        return
+    # 使用字典去重
+    news_ids = { item.get("news_id", "") for item in items }
+
+    if not news_ids:
+        return
+
+    stmt = (
+        update(news_item)
+        .where(news_item.c.id.in_(news_ids))
+        .values(
+            extracted=True,
+            extracted_at=func.current_timestamp()
+        )
+    )
+    await session.execute(stmt)
