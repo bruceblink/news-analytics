@@ -1,5 +1,5 @@
 from sqlalchemy import Table, Column, BigInteger, String, Date, Text, TIMESTAMP, MetaData, ForeignKey, JSON, \
-    UniqueConstraint, Boolean
+    UniqueConstraint, Boolean, Float
 from sqlalchemy.sql import func
 
 metadata = MetaData()
@@ -32,6 +32,18 @@ news_item = Table(
     Column("extracted", Boolean, nullable=False, server_default="false"),
     Column("extracted_at", TIMESTAMP(timezone=True), nullable=True),
 
+    Column("created_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    Column("updated_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+)
+
+news_keywords = Table(
+    "news_keywords",
+    metadata,
+    Column("id", BigInteger, primary_key=True),
+    Column("news_id", Text, ForeignKey("news_item.id", ondelete="CASCADE")),
+    Column("keyword", Text, nullable=False),
+    Column("weight", Float, nullable=False),
+    Column("method", Text, nullable=False),
     Column("created_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column("updated_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
 )
