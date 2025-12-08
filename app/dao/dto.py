@@ -6,3 +6,13 @@ class NewsKeywordsDTO:
     word: str
     weight: float
     method: str
+
+
+@dataclass
+class NewsItemDTO:
+    id: str
+    title: str
+    url: str
+    source: str | None
+    published_at: str | None
+    score: float
