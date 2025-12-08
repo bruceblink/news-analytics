@@ -70,3 +70,44 @@ async def update_news_item_extracted_state(session, items: list[dict]) -> None:
         )
     )
     await session.execute(stmt)
+
+
+async def fetch_news_by_id(news_id: str) -> list[dict]:
+    """
+     根据新闻id查询新闻详情
+    :param news_id:
+    :return:
+    """
+    async with AsyncSessionLocal() as session:
+
+        stmt = (
+            select(
+                news_item.c.id,
+                news_item.c.news_info_id,
+                news_item.c.title,
+                news_item.c.url,
+                news_item.c.published_at,
+                news_item.c.source,
+                news_item.c.content,
+            )
+        )
+
+        conditions = [news_item.c.id == news_id]
+
+        stmt = stmt.where(and_(*conditions))
+        stmt = stmt.order_by(news_item.c.published_at.desc()).limit(1)
+
+        result = await session.execute(stmt)
+        rows = result.mappings().all()
+
+        return [
+            {
+                "id": r["id"],
+                "title": r["title"],
+                "url": r["url"],
+                "published_at": r["published_at"].isoformat() if r["published_at"] else None,
+                "source": r["source"],
+                "content": r["content"],
+            }
+            for r in rows
+        ]
