@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime, date
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path, Body
+from fastapi import APIRouter, HTTPException, Depends, Path, Body
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -16,16 +16,6 @@ from ..services.analysis_service import (
 )
 
 router = APIRouter(prefix="/api/analysis")
-
-
-@router.get("/news", summary="获取新闻列表（分页）")
-async def list_news(
-    limit: int = Query(100, ge=1, le=500),
-    start_date: str | None = None,
-    end_date: str | None = None,
-):
-    rows = await fetch_news_item_rows(start_date, end_date, limit)
-    return {"count": len(rows), "items": rows}
 
 
 class TFIDFQuery(BaseModel):
