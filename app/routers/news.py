@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from fastapi import APIRouter, Path, Query, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, and_
 
 from app.dao.news_item_dao import fetch_news_by_id
 from app.db import AsyncSessionLocal
@@ -38,10 +38,13 @@ async def get_related_news(
 ):
     async with AsyncSessionLocal() as session:
         # 1) 获取目标新闻关键词及权重
-        target_result = await session.execute(
-            select(news_keywords.c.keyword, news_keywords.c.weight)
-            .where(news_keywords.c.news_id == news_id)
-        )
+
+        stmt = (select(news_keywords.c.keyword, news_keywords.c.weight))
+        conditions = [news_keywords.c.news_id == news_id]
+        stmt = stmt.where(and_(*conditions))
+
+        target_result = await session.execute(stmt)
+
         target_keywords = {r.keyword: r.weight for r in target_result.all()}
         if not target_keywords:
             raise HTTPException(status_code=404, detail="目标新闻关键词不存在")
@@ -51,8 +54,9 @@ async def get_related_news(
             news_keywords.c.news_id,
             news_keywords.c.keyword,
             news_keywords.c.weight
-        ).where(news_keywords.c.news_id != news_id)
-
+        )
+        conditions1 = [news_keywords.c.news_id == news_id]
+        stmt = stmt.where(and_(*conditions1))
         rows = (await session.execute(stmt)).all()
 
         if not rows:
