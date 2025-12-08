@@ -45,17 +45,25 @@ class TFIDFQuery(BaseModel):
             raise ValueError("日期格式错误，应为 YYYY-MM-DD")
 
 
-@router.get("/tfidf", summary="返回 TF-IDF Top N 词")
-async def tfidf_top(params: TFIDFQuery = Depends()):
+@router.post("/tfidf", summary="生成 TF-IDF Top N 关键词")
+async def tfidf_top(params: TFIDFQuery):
+    """
+     请求计算 TF-IDF Top N 词
+
+    - **limit**: 处理的最大新闻数量 (1-500)
+    - **top_k**: 返回的关键词数量 (1-10)
+    - **start_date**: 开始日期 (格式: YYYY-MM-DD)
+    - **end_date**: 结束日期 (格式: YYYY-MM-DD)
+    """
     rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
 
     if not rows:
-        return {"status": "ok", "terms": []}
+        return {"status": "ok", "msgs": "no data to generate"}
 
-    tops =  await async_tfidf_top(rows, top_n=params.top_k)
+    tops = await async_tfidf_top(rows, top_n=params.top_k)
     # 执行提取关键字的事务作业
     await extract_keywords_task(tops)
-    return {"status": "ok", "terms": tops}
+    return {"status": "ok", "msgs": "generate success"}
 
 
 class WordcloudQuery(TFIDFQuery):
