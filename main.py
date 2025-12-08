@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
 from app import settings
-from app.routers import analysis
+from app.routers import analysis, search
 
 app = FastAPI(title="News Analytics API")
 
@@ -15,7 +15,9 @@ os.makedirs(settings.WORDCLOUD_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 
 # include routers
-app.include_router(analysis.router)
+app.include_router(analysis.router, tags=["分析模块"])
+app.include_router(search.router, tags=["搜索模块"])
+
 
 @app.get("/")
 def root():

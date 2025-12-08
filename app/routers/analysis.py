@@ -15,7 +15,7 @@ from ..services.analysis_service import (
     async_generate_wordcloud,
 )
 
-router = APIRouter(prefix="/api/analysis", tags=["analysis"])
+router = APIRouter(prefix="/api/analysis")
 
 
 @router.get("/news", summary="获取新闻列表（分页）")
