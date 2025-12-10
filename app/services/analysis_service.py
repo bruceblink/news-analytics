@@ -53,7 +53,7 @@ def compute_tfidf_top(
     news_ids = [item.get("id", "") for item in corpus]
 
     texts = [
-        ((item.get("content") or "").strip() or item.get("title", "")).strip()
+        item.get("title", "").strip()
         for item in corpus
     ]
 
