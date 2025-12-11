@@ -3,6 +3,11 @@ from app.db import AsyncSessionLocal
 
 
 async def extract_keywords_task(items: list[dict]):
+    """
+     提取新闻关键字
+    :param items:
+    :return:
+    """
 
     async with AsyncSessionLocal() as session:
         async with session.begin():   # ← ★ 事务开始
