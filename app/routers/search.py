@@ -2,7 +2,7 @@ import wordfreq_cn
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from app.dao.news_dao import fetch_news_rows
+from app.dao import fetch_news_item_by_keywords
 
 router = APIRouter(prefix="/api/search")
 
@@ -23,6 +23,6 @@ async def search_news(
     if not keywords:
         return SearchResponse(total=0, items=[])
 
-    items = await fetch_news_rows(keywords, limit, offset)
+    items = await fetch_news_item_by_keywords(keywords, limit, offset)
 
     return SearchResponse(total=len(items), items=items)

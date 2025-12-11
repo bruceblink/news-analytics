@@ -4,7 +4,7 @@ from fastapi import APIRouter, Path, Query, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, and_
 
-from app.dao.news_item_dao import fetch_news_by_id
+from app.dao.news_item_dao import fetch_news_item_by_id
 from app.db import AsyncSessionLocal
 from app.models import news_keywords, news_item
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/news")
 @router.get("/{news_id}")
 async def get_news_detail(news_id: str):
     # 返回新闻详情
-    return await fetch_news_by_id(news_id)
+    return await fetch_news_item_by_id(news_id)
 
 
 class RelatedNewsItem(BaseModel):

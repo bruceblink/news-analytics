@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
 from ..config import settings
-from ..dao import fetch_news_item_rows
+from ..dao.news_item_dao import fetch_news_item_rows_not_extracted
 from ..services import extract_keywords_task
 from ..services.analysis_service import (
     docs_to_corpus,
@@ -45,7 +45,7 @@ async def tfidf_top(params: TFIDFQuery):
     - **start_date**: 开始日期 (格式: YYYY-MM-DD)
     - **end_date**: 结束日期 (格式: YYYY-MM-DD)
     """
-    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
+    rows = await fetch_news_item_rows_not_extracted(params.start_date, params.end_date, limit=params.limit)
 
     if not rows:
         return {"status": "ok", "msgs": "no data to generate"}
@@ -62,7 +62,7 @@ class WordcloudQuery(TFIDFQuery):
 
 @router.get("/wordcloud", summary="生成词云并返回图片 URL")
 async def wordcloud(params: WordcloudQuery = Depends()):
-    rows = await fetch_news_item_rows(params.start_date, params.end_date, limit=params.limit)
+    rows = await fetch_news_item_rows_not_extracted(params.start_date, params.end_date, limit=params.limit)
     corpus = await docs_to_corpus(rows)
     if not corpus:
         raise HTTPException(status_code=404, detail="No documents")
@@ -89,7 +89,7 @@ async def generate_wordcloud(
         return {"status": "exists", "date": gene_date, "image_path": image_path}
 
     # 3. 获取生成词云的数据
-    rows = await fetch_news_item_rows(start_date=now_date.date(), end_date=now_date.date())
+    rows = await fetch_news_item_rows_not_extracted(start_date=now_date.date(), end_date=now_date.date())
     corpus = await docs_to_corpus(rows)
 
     # 4. 调用业务逻辑生成词云
