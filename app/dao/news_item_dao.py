@@ -118,7 +118,7 @@ async def fetch_news_item_rows_not_extracted(
             conditions.append(news_item.c.published_at <= end_date)
 
         stmt = stmt.where(and_(*conditions))
-        stmt = stmt.order_by(news_item.c.published_at.desc()).limit(limit)
+        stmt = stmt.order_by(news_item.c.created_at.desc()).limit(limit)
 
         result = await session.execute(stmt)
         rows = result.mappings().all()
