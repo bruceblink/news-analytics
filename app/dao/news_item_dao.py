@@ -1,7 +1,8 @@
 # helper to query news rows (simple)
 from datetime import date
 
-from sqlalchemy import select, and_, update, func, or_, insert
+from sqlalchemy import select, and_, update, func, or_, literal_column
+from sqlalchemy.dialects.postgresql import insert
 
 from app.db import AsyncSessionLocal
 from app.models import news_item, news_keywords
@@ -204,12 +205,29 @@ async def fetch_news_item_by_id(news_id: str) -> list[dict]:
 
 
 async def save_news_items(session, items: list[dict]) -> None:
-
     if not items:
         return None
 
-    stmt = insert(news_item).values(items)
+    # 1. 对 items 进行去重，保留每个 (item_id, published_at) 的最后一条记录
+    seen = {}
+    for item in items:
+        # 构建唯一键，这里假设 published_at 已处理为日期字符串或 None
+        key = (item.get("item_id"), item.get("published_at"))
+        seen[key] = item  # 后续出现的记录会覆盖先前的，保留最后一条
 
+    unique_items = list(seen.values())
 
+    # 2. 使用去重后的列表进行插入或更新
+    stmt = insert(news_item).values(unique_items)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["item_id", "published_at"],
+        set_={
+            "title": literal_column("excluded.title"),
+            "url": literal_column("excluded.url"),
+            "source": literal_column("excluded.source"),
+            "embedding": literal_column("excluded.embedding"),
+            "cluster_id": literal_column("excluded.cluster_id"),
+        }
+    )
     await session.execute(stmt)
     return None
