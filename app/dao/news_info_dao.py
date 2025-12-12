@@ -50,7 +50,7 @@ async def fetch_news_info_rows(
                 "id": r["id"],
                 "name": r["name"],
                 "news_from": r["news_from"],
-                "news_date": r["news_date"].isoformat() if r["news_date"] else None,
+                "news_date": r["news_date"],
                 "data": r["data"],
                 "extracted": r["extracted"],
                 "error": r["error"],
@@ -69,7 +69,7 @@ async def update_news_info_extracted_state(session, items: list[dict]) -> None:
     if not items:
         return
     # 使用字典去重
-    news_ids = { item.get("news_id", "") for item in items }
+    news_ids = { item.get("news_info_id", "") for item in items }
 
     if not news_ids:
         return
