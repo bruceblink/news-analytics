@@ -14,6 +14,9 @@ news_info = Table(
     Column("data", JSON),
     Column("created_at", TIMESTAMP(timezone=True)),
     Column("updated_at", TIMESTAMP(timezone=True)),
+    Column("extracted", Boolean, nullable=False, server_default="false"),
+    Column("extracted_at", TIMESTAMP(timezone=True), nullable=True),
+    Column("error", Text, nullable=True),
     UniqueConstraint("news_from", "news_date", name="uniq_news_info")
 )
 
