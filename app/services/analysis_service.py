@@ -88,6 +88,53 @@ def generate_wordcloud(
     return generate_trend_wordcloud(corpus, output_dir=out_path, max_words=max_words)
 
 
+def build_news_item_from_news_info(news: list[dict]) -> list[dict]:
+    """从嵌套新闻数据中构建扁平化条目信息"""
+    result = []
+
+    for news_item in news:
+        if not (data := news_item.get("data")):
+            continue
+
+        # 提取data中重复使用的字段
+        news_info_id = news_item.get("id", 0)
+        published_at = news_item.get("news_date", "")
+        source = news_item.get("name", "")
+
+        # 遍历items并构建结果
+        for item in data.get("items", []):
+            result.append({
+                "item_id": item.get("id", ""),
+                "news_info_id": news_info_id,
+                "title": item.get("title", ""),
+                "url": item.get("url", ""),
+                "published_at": published_at,
+                "source": source,
+            })
+
+    return result
+
+
+def build_news_item_from_news_info1(news: list[dict]) -> list[dict]:
+    """
+     列表生成式优化
+    :param news:
+    :return:
+    """
+    return [
+        {
+            "item_id": item.get("id", ""),
+            "news_info_id": data.get("id", 0),
+            "title": item.get("title", ""),
+            "url": data.get("url", ""),
+            "published_at": data.get("news_date", ""),
+            "source": data.get("name", ""),
+        }
+        for news_item in news if (data := news_item.get("data"))
+        for item in data.get("items", [])
+    ]
+
+
 # Public coroutine wrappers
 import asyncio
 
