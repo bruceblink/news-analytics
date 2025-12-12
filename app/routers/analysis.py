@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/analysis")
 
 
 class BaseQuery(BaseModel):
-    limit: int = Field(50, ge=1, le=500)
+    limit: int = Field(100, ge=1, le=500)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -39,10 +39,9 @@ async def extract_news_item_from_news_info(params: BaseQuery):
     - **start_date**: 开始日期 (格式: YYYY-MM-DD)
     - **end_date**: 结束日期 (格式: YYYY-MM-DD)
     """
-    # 设置查询的最大数量的默认值
-    limit = params.limit or 100
+
     # 查询待处理的news_info
-    rows = await fetch_news_info_rows(params.start_date, params.end_date, limit=limit)
+    rows = await fetch_news_info_rows(params.start_date, params.end_date, limit=params.limit)
 
     if not rows:
         return {"status": "ok", "msgs": "no news_info to fetch"}
