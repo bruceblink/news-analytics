@@ -8,7 +8,7 @@ metadata = MetaData()
 news_info = Table(
     "news_info",
     metadata,
-    Column("id", BigInteger, primary_key=True),
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
     Column("name", String(50), nullable=False),
     Column("news_from", String(50), nullable=False),
     Column("news_date", Date, nullable=False),
@@ -24,7 +24,7 @@ news_info = Table(
 news_item = Table(
     "news_item",
     metadata,
-    Column("id", Text, primary_key=True),
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
     Column("item_id", Text, nullable=False),
     Column("news_info_id", BigInteger, ForeignKey("news_info.id", ondelete="CASCADE")),
     Column("title", Text, nullable=False),
