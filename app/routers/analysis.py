@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/analysis")
 
 
 class BaseQuery(BaseModel):
-    limit: int = Field(100, ge=1, le=500)
+    limit: int = Field(50, ge=1, le=100)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -35,7 +35,7 @@ async def extract_news_item_from_news_info(params: BaseQuery):
     """
      从原始新闻数据中提取news_item
 
-    - **limit**: 处理的最大新闻数量 (1-50)
+    - **limit**: 处理的最大新闻数量 (1-100, 默认50)
     - **start_date**: 开始日期 (格式: YYYY-MM-DD)
     - **end_date**: 结束日期 (格式: YYYY-MM-DD)
     """
