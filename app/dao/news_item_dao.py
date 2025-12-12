@@ -1,7 +1,7 @@
 # helper to query news rows (simple)
 from datetime import date
 
-from sqlalchemy import select, and_, update, func, or_
+from sqlalchemy import select, and_, update, func, or_, insert
 
 from app.db import AsyncSessionLocal
 from app.models import news_item, news_keywords
@@ -201,3 +201,15 @@ async def fetch_news_item_by_id(news_id: str) -> list[dict]:
             }
             for r in rows
         ]
+
+
+async def save_news_items(session, items: list[dict]) -> None:
+
+    if not items:
+        return None
+
+    stmt = insert(news_item).values(items)
+
+
+    await session.execute(stmt)
+    return None

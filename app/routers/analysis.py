@@ -3,13 +3,54 @@ from datetime import date
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, field_validator
 
+from ..dao.news_info_dao import fetch_news_info_rows
 from ..dao.news_item_dao import fetch_news_item_rows_not_extracted
 from ..services import extract_keywords_task
 from ..services.analysis_service import (
-    async_tfidf_top,
+    async_tfidf_top, build_news_item_from_news_info,
 )
+from ..services.extract_news_service import extract_news_items_task
 
 router = APIRouter(prefix="/api/analysis")
+
+
+class BaseQuery(BaseModel):
+    limit: int = Field(50, ge=1, le=500)
+    start_date: date | None = None
+    end_date: date | None = None
+
+    @field_validator("start_date", "end_date", mode="before")
+    @classmethod
+    def check_date_format(cls, v):
+        if v is None:
+            return v
+        try:
+            return date.fromisoformat(v)
+        except ValueError:
+            raise ValueError("日期格式错误，应为 YYYY-MM-DD")
+
+
+@router.post("/extract_news", summary="提取新闻item")
+async def extract_news_item_from_news_info(params: BaseQuery):
+    """
+     从原始新闻数据中提取news_item
+
+    - **limit**: 处理的最大新闻数量 (1-50)
+    - **start_date**: 开始日期 (格式: YYYY-MM-DD)
+    - **end_date**: 结束日期 (格式: YYYY-MM-DD)
+    """
+    # 设置查询的最大数量的默认值
+    limit = params.limit or 100
+    # 查询待处理的news_info
+    rows = await fetch_news_info_rows(params.start_date, params.end_date, limit=limit)
+
+    if not rows:
+        return {"status": "ok", "msgs": "no news_info to fetch"}
+    # 数据转换
+    news_items = build_news_item_from_news_info(rows)
+    # 执行提取news_item的事务作业
+    await extract_news_items_task(news_items)
+    return {"status": "ok", "msgs": "news item extract success"}
 
 
 class TFIDFQuery(BaseModel):
