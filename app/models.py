@@ -1,3 +1,4 @@
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Table, Column, BigInteger, String, Date, Text, TIMESTAMP, MetaData, ForeignKey, JSON, \
     UniqueConstraint, Boolean, Float
 from sqlalchemy.sql import func
@@ -24,12 +25,15 @@ news_item = Table(
     "news_item",
     metadata,
     Column("id", Text, primary_key=True),
+    Column("item_id", Text, nullable=False),
     Column("news_info_id", BigInteger, ForeignKey("news_info.id", ondelete="CASCADE")),
     Column("title", Text, nullable=False),
     Column("url", Text, nullable=False),
     Column("published_at", Date),
     Column("source", String(50)),
     Column("content", Text),
+    Column("embedding", Vector, nullable=True),
+    Column("cluster_id", BigInteger, nullable=True),
 
     # ⭐ 新增字段
     Column("extracted", Boolean, nullable=False, server_default="false"),
@@ -37,6 +41,7 @@ news_item = Table(
 
     Column("created_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
     Column("updated_at", TIMESTAMP(timezone=True), server_default=func.current_timestamp()),
+    UniqueConstraint("item_id", "published_at", name="uq_news_date"),
 )
 
 news_keywords = Table(
