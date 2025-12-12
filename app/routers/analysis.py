@@ -71,7 +71,7 @@ class TFIDFQuery(BaseModel):
 
 
 @router.post("/tfidf", summary="生成 TF-IDF Top N 关键词")
-async def tfidf_top(params: TFIDFQuery):
+async def extract_tfidf_top_keywords(params: TFIDFQuery):
     """
      请求计算 TF-IDF Top N 词
 
