@@ -98,7 +98,7 @@ def build_news_item_from_news_info(news: list[dict]) -> list[dict]:
 
         # 提取data中重复使用的字段
         news_info_id = news_item.get("id", 0)
-        published_at = news_item.get("news_date", "")
+        published_at = news_item.get("news_date", None)
         source = news_item.get("name", "")
 
         # 遍历items并构建结果
