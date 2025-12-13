@@ -154,65 +154,46 @@ async def async_generate_wordcloud(
     return await asyncio.to_thread(generate_wordcloud, corpus, out_path)
 
 
-import numpy as np
-from gensim.models import Word2Vec
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import MiniBatchKMeans
 
 
-def compute_embeddings(texts: list[str]) -> list[list[float]]:
-    """
-    使用 Word2Vec + 句向量平均  计算embedding
-    """
-    tokenized = [t.split() for t in texts]
-
-    # 训练轻量级 word2vec
-    w2v = Word2Vec(
-        sentences=tokenized,
-        vector_size=128,
-        window=5,
-        min_count=1,
-        workers=4
-    )
-
-    def embed_sentence(words):
-        vecs = [w2v.wv[w] for w in words if w in w2v.wv]
-        return np.mean(vecs, axis=0) if vecs else np.zeros(w2v.vector_size)
-
-    return [embed_sentence(words).tolist() for words in tokenized]
-
-
-def cluster_embeddings(
-        embeddings: list[list[float]],
+def embedding_cluster_pipeline(
+        texts: list[str],
         n_clusters: int = 50,
-        batch_size: int = 64,
-        random_state: int = 42
-) -> list[int]:
+        max_features: int = 512,
+        random_state: int = 42,
+) -> tuple[list[int], str]:
     """
-     使用kmeans聚类embeddings
-    :param embeddings:
-    :param n_clusters:
-    :param batch_size:
-    :param random_state:
-    :return:
+    文本 → 聚类流水线
+
+    返回：
+    - cluster_ids: 每条文本对应的 cluster_id
+    - cluster_method: 本次使用的聚类方法描述
     """
-    X = np.vstack(embeddings)
-    kmeans = MiniBatchKMeans(
-        n_clusters=n_clusters,
-        batch_size=batch_size,
-        random_state=random_state,
-        max_iter=100
+
+    if not texts:
+        return [], ""
+
+    # 1. TF-IDF embedding（仅作为中间变量）
+    vectorizer = TfidfVectorizer(
+        max_features=max_features,
+        ngram_range=(1, 2),
+        min_df=2,
+        max_df=0.95,
     )
-    labels = kmeans.fit_predict(X)
-    return labels.tolist()
+    X = vectorizer.fit_transform(texts)
 
+    # 2. MiniBatchKMeans 聚类
+    kmeans = MiniBatchKMeans(
+        n_clusters=min(n_clusters, X.shape[0]),
+        batch_size=64,
+        random_state=random_state,
+        max_iter=100,
+    )
+    cluster_ids = kmeans.fit_predict(X).tolist()
 
-def embedding_cluster_pipeline(texts: list[str], n_clusters: int = 50):
-    """
-     embedding -> cluster 流水线
-    :param texts:
-    :param n_clusters:
-    :return:
-    """
-    embeddings = compute_embeddings(texts)
-    cluster_ids = cluster_embeddings(embeddings, n_clusters)
-    return embeddings, cluster_ids
+    # 3. 方法标识（业务需要）
+    cluster_method = f"tfidf-{max_features}-kmeans"
+
+    return cluster_ids, cluster_method
