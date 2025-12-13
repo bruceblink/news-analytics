@@ -225,7 +225,7 @@ async def save_news_items(session, items: list[dict]) -> None:
             "title": literal_column("excluded.title"),
             "url": literal_column("excluded.url"),
             "source": literal_column("excluded.source"),
-            "embedding": literal_column("excluded.embedding"),
+            "cluster_method": literal_column("excluded.cluster_method"),
             "cluster_id": literal_column("excluded.cluster_id"),
         }
     )
