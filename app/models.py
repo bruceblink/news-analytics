@@ -47,7 +47,7 @@ news_keywords = Table(
     "news_keywords",
     metadata,
     Column("id", BigInteger, primary_key=True, autoincrement=True),
-    Column("news_id",Text,ForeignKey("news_item.id", ondelete="CASCADE"),nullable=False,),
+    Column("news_id",BigInteger,ForeignKey("news_item.id", ondelete="CASCADE"),nullable=False,),
     Column("keyword", Text, nullable=False),
     Column("weight", Float, nullable=True),
     Column("method", Text, nullable=False),
