@@ -97,14 +97,14 @@ def build_news_item_from_news_info(news: list[dict]) -> list[dict]:
             continue
 
         # 提取data中重复使用的字段
-        news_info_id = news_item.get("id", 0)
+        news_info_id = news_item.get("id")
         published_at = news_item.get("news_date", None)
         source = news_item.get("name", "")
 
         # 遍历items并构建结果
         for item in data.get("items", []):
             result.append({
-                "item_id": item.get("id", ""),
+                "item_id": str(item.get("id", "")),
                 "news_info_id": news_info_id,
                 "title": item.get("title", ""),
                 "url": item.get("url", ""),
