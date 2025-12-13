@@ -7,7 +7,7 @@ from ..dao.news_info_dao import fetch_news_info_rows
 from ..dao.news_item_dao import fetch_news_item_rows_not_extracted
 from ..services import extract_keywords_task
 from ..services.analysis_service import (
-    async_tfidf_top, build_news_item_from_news_info,
+    async_tfidf_top, build_news_item_from_news_info, embedding_cluster_pipeline,
 )
 from ..services.extract_news_service import extract_news_items_task
 
@@ -47,6 +47,18 @@ async def extract_news_item_from_news_info(params: BaseQuery):
         return {"status": "ok", "msgs": "no news_info to fetch"}
     # 数据转换
     news_items = build_news_item_from_news_info(rows)
+    # 生成embeddings + cluster
+    # 1. 获取title list
+    title_list = [item["title"] or "" for item in news_items]
+    # 2. 执行embeddings -> cluster pipeline
+    cluster_ids, cluster_method = embedding_cluster_pipeline(
+        title_list,
+        n_clusters=params.limit
+    )
+    # 3. 合并结果
+    for item, cid in zip(news_items, cluster_ids):
+        item["cluster_id"] = cid
+        item["cluster_method"] = cluster_method
     # 执行提取news_item的事务作业
     await extract_news_items_task(news_items)
     return {"status": "ok", "msgs": "news item extract success"}
