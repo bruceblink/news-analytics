@@ -81,7 +81,7 @@ class TFIDFQuery(BaseModel):
             raise ValueError("日期格式错误，应为 YYYY-MM-DD")
 
 
-@router.post("/tfidf", summary="生成 TF-IDF Top N 关键词")
+#@router.post("/tfidf", summary="生成 TF-IDF Top N 关键词")
 async def extract_tfidf_top_keywords(params: TFIDFQuery):
     """
      请求计算 TF-IDF Top N 词
