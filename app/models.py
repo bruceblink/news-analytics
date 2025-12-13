@@ -1,4 +1,3 @@
-from pgvector.sqlalchemy import Vector
 from sqlalchemy import Table, Column, BigInteger, String, Date, Text, TIMESTAMP, MetaData, ForeignKey, JSON, \
     UniqueConstraint, Boolean, Float
 from sqlalchemy.sql import func
@@ -32,7 +31,7 @@ news_item = Table(
     Column("published_at", Date),
     Column("source", String(50)),
     Column("content", Text),
-    Column("embedding", Vector, nullable=True),
+    Column("cluster_method", Text, nullable=True),
     Column("cluster_id", BigInteger, nullable=True),
 
     # ⭐ 新增字段
